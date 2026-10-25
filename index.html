@@ -36,10 +36,10 @@
   <main class="login-screen" id="login-screen">
     <section class="login-card" aria-labelledby="login-title">
       <div class="login-brand"><span class="brand-mark"><i data-lucide="indian-rupee"></i></span>Expense Manager</div>
-      <div class="login-eyebrow">Local demo access</div>
-      <h1 id="login-title">Welcome</h1>
-      <p class="login-copy">Continue to the Expense Manager demo on this device.</p>
-      <form id="login-form"><button class="login-submit" type="submit">Continue to demo</button></form>
+      <div class="login-eyebrow">Expense Manager</div>
+      <h1 id="login-title">Log in</h1>
+      <p class="login-copy">Log in to open the app on this device.</p>
+      <form id="login-form"><button class="login-submit" type="submit">Log in</button></form>
       <p class="login-disclaimer">This is only a sign-in screen, not account authentication. No password is used. Demo data remains in this browser and is not protected by this screen.</p>
       <p class="login-copy" id="login-status" role="status" aria-live="polite"></p>
     </section>
@@ -76,12 +76,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (()=>{
-      const demoSessionKey='expense-manager-demo-session',loginScreen=$('#login-screen'),appShell=$('.app'),bottomNav=$('.bottom-nav');
+      const demoSessionKey='expense-manager-demo-session',loginScreen=document.querySelector('#login-screen'),appShell=document.querySelector('.app'),bottomNav=document.querySelector('.bottom-nav');
       const showLogin=()=>{loginScreen.hidden=false;appShell.hidden=true;bottomNav.hidden=true};
       const showApp=()=>{loginScreen.hidden=true;appShell.hidden=false;bottomNav.hidden=false};
-      $('#login-form').addEventListener('submit',event=>{event.preventDefault();try{sessionStorage.setItem(demoSessionKey,'active')}catch(error){console.error('Unable to persist local demo session',error);toast('Session storage is unavailable. The demo will only last until this page closes.')}showApp()});
-      $('#sign-out').addEventListener('click',()=>{try{sessionStorage.removeItem(demoSessionKey)}catch(error){console.error('Unable to end local demo session',error);toast('Could not sign out. Please close this tab to end the demo session.');return}showLogin()});
-      try{if(sessionStorage.getItem(demoSessionKey)==='active')showApp()}catch(error){console.error('Unable to restore local demo session',error);$('#login-status').textContent='Session storage is unavailable. Continuing will only last until this page closes.'}
+      document.querySelector('#login-form').addEventListener('submit',event=>{event.preventDefault();try{sessionStorage.setItem(demoSessionKey,'active')}catch(error){console.error('Unable to persist local demo session',error);toast('Session storage is unavailable. The demo will only last until this page closes.')}showApp()});
+      document.querySelector('#sign-out').addEventListener('click',()=>{try{sessionStorage.removeItem(demoSessionKey)}catch(error){console.error('Unable to end local demo session',error);toast('Could not sign out. Please close this tab to end the demo session.');return}showLogin()});
+      try{if(sessionStorage.getItem(demoSessionKey)==='active')showApp()}catch(error){console.error('Unable to restore local demo session',error);document.querySelector('#login-status').textContent='Session storage is unavailable. Continuing will only last until this page closes.'}
       const categories={Expense:['Rent / EMI','Groceries (Kirana)','Food & dining','Utilities','Mobile / Broadband','Fuel / Transport','Shopping','Medical','OTT subscriptions','Domestic help','School / Tuition fees','Travel','Personal care','Other'],Income:['Salary','Freelance','Business','Interest','Gift','Other income'],Investment:['Mutual funds / SIP','Stocks','Fixed deposit','Gold','PPF / EPF','Other investment'],Savings:['Emergency fund','Savings account','Recurring deposit','Other savings'],Transfer:['Bank transfer','UPI transfer','Other transfer'],Loan:['Loan repayment','Loan received','Other loan'],Insurance:['Life insurance','Health insurance','Vehicle insurance','Other insurance']};
       const types=['Expense','Income','Investment','Savings','Transfer','Loan','Insurance'];
       const navItems=[['overview','layout-dashboard','Overview'],['transactions','arrow-left-right','Transactions'],['budgets','chart-pie','Budgets'],['savings','piggy-bank','Savings'],['investments','chart-no-axes-combined','Investments']];
