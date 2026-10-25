@@ -1,0 +1,99 @@
+name: Build and deploy
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel
+
+      - name: Pull Vercel project settings
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          else
+            vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Build Vercel deployment
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            vercel build --prod --token="$VERCEL_TOKEN"
+          else
+            vercel build --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Package deployed build output
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: zip -qr Expense-Manager-vercel-output.zip .vercel/output
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
+          else
+            vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Upload release build for publishing
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: Expense-Manager-vercel-output
+          path: Expense-Manager-vercel-output.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download deployed build output
+        uses: actions/download-artifact@v4
+        with:
+          name: Expense-Manager-vercel-output
+
+      - name: Create release and attach deployed build
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: Expense-Manager-vercel-output.zip
+          fail_on_unmatched_files: true

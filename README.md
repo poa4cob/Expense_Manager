@@ -18,6 +18,18 @@ python3 -m http.server 8000
 
 Then open <http://localhost:8000>.
 
+## Deploy with Vercel
+
+The GitHub Actions workflow builds and deploys every branch push to Vercel as a preview deployment. Push a tag matching `v*` (for example, `v1.0.0`) to build and deploy to production; the workflow also creates a GitHub Release and attaches `Expense-Manager-vercel-output.zip`, containing the exact Vercel build output used for that deployment.
+
+Add these repository Actions secrets before using the workflow:
+
+- `VERCEL_TOKEN`: a Vercel access token with access to the project.
+- `VERCEL_ORG_ID`: the Vercel team or account ID.
+- `VERCEL_PROJECT_ID`: the Vercel project ID for this app.
+
+Find the organization and project IDs in the linked Vercel project's `.vercel/project.json` after running `vercel link` locally. Do not commit that file or the access token.
+
 ## Data and limitations
 
 This is a local-only prototype. Records are saved in the current browser's `localStorage` and are not encrypted, backed up, synchronized, or linked to a bank. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
