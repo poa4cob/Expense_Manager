@@ -86,9 +86,19 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (async()=>{
-      const loginScreen=document.querySelector('#login-screen'),appShell=document.querySelector('.app'),bottomNav=document.querySelector('.bottom-nav'),profileIcon=document.querySelector('#profile-options'),profileDropdown=document.querySelector('#profile-dropdown'),loginStatus=document.querySelector('#login-status'),firebaseConfig=window.EXPENSE_MANAGER_FIREBASE||JSON.parse(document.querySelector('#firebase-config-fallback').textContent),guestToken=new URLSearchParams(window.location.search).get('guest'),guestMode=Boolean(guestToken);
+      const loginScreen=document.querySelector('#login-screen'),appShell=document.querySelector('.app'),bottomNav=document.querySelector('.bottom-nav'),profileIcon=document.querySelector('#profile-options'),profileDropdown=document.querySelector('#profile-dropdown'),loginStatus=document.querySelector('#login-status'),guestToken=new URLSearchParams(window.location.search).get('guest'),guestMode=Boolean(guestToken);
       loginStatus.textContent='Checking your sign-in status…';
       if(!window.firebase){loginStatus.textContent='Could not load Firebase. Check your internet connection and reload.';return}
+      let firebaseConfig=window.EXPENSE_MANAGER_FIREBASE;
+      if(!firebaseConfig?.apiKey||!firebaseConfig?.authDomain||!firebaseConfig?.projectId||!firebaseConfig?.appId){
+        try{
+          await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=`./firebase-config.js?reload=${Date.now()}`;script.onload=resolve;script.onerror=()=>reject(new Error('firebase-config.js could not be loaded'));document.head.append(script)});
+          firebaseConfig=window.EXPENSE_MANAGER_FIREBASE;
+        }catch(error){console.error('Unable to load Firebase configuration',error)}
+      }
+      if(!firebaseConfig?.apiKey||!firebaseConfig?.authDomain||!firebaseConfig?.projectId||!firebaseConfig?.appId){
+        try{firebaseConfig=JSON.parse(document.querySelector('#firebase-config-fallback').textContent)}catch(error){console.error('Embedded Firebase configuration is invalid',error)}
+      }
       if(!firebaseConfig?.apiKey||!firebaseConfig?.authDomain||!firebaseConfig?.projectId||!firebaseConfig?.appId){loginStatus.textContent='Cloud sync is not configured. Add your Firebase web app config to firebase-config.js, then reload.';return}
       const firebaseApp=window.firebase.apps.length?window.firebase.app():window.firebase.initializeApp(firebaseConfig),auth=firebaseApp.auth(),firestore=firebaseApp.firestore();
       let authUser,profileName,userEmail,workspaceId,workspaceRole,workspaceRef,guestSettingsRef,activeGuestToken=null;
