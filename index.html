@@ -29,10 +29,22 @@
     @media(max-width:380px){.topbar{gap:8px}.top-actions{gap:6px}.month-picker .date-select{max-width:122px}.avatar{display:none}}
     @media print{body{background:#fff}.sidebar,.bottom-nav,.topbar,.page-heading>button,.report-tools,.filter-row,.transaction-actions{display:none!important}.main{max-width:none;padding:0}.view{display:none!important}#view-transactions{display:block!important}.panel{box-shadow:none;border:0;padding:0}.transaction-row{break-inside:avoid}}
     .topbar .brand{font-size:clamp(12px,4vw,16px)}
+    .login-screen[hidden],.app[hidden],.bottom-nav[hidden]{display:none!important}.login-screen{min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 15% 10%,#e8f4ed 0,transparent 42%),var(--paper)}.login-card{width:min(100%,420px);padding:30px;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.login-brand{display:flex;align-items:center;gap:10px;font:800 19px var(--display);letter-spacing:-.4px}.login-eyebrow{margin-top:28px;text-transform:uppercase;letter-spacing:1.4px;font-size:10px;font-weight:700;color:var(--green)}.login-card h1{margin:7px 0 9px}.login-copy{color:#657068;font-size:13px}.login-submit{width:100%;margin-top:22px;padding:12px 16px;border:0;border-radius:11px;background:var(--green);color:#fff;font-weight:700}.login-submit:hover{background:var(--green-dark)}.login-disclaimer{margin-top:16px;padding:12px;border-radius:11px;background:#f5f7f3;color:#657068;font-size:11px}
   </style>
 </head>
 <body>
-  <div class="app">
+  <main class="login-screen" id="login-screen">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-brand"><span class="brand-mark"><i data-lucide="indian-rupee"></i></span>Expense Manager</div>
+      <div class="login-eyebrow">Local demo access</div>
+      <h1 id="login-title">Welcome</h1>
+      <p class="login-copy">Continue to the Expense Manager demo on this device.</p>
+      <form id="login-form"><button class="login-submit" type="submit">Continue to demo</button></form>
+      <p class="login-disclaimer">This is only a sign-in screen, not account authentication. No password is used. Demo data remains in this browser and is not protected by this screen.</p>
+      <p class="login-copy" id="login-status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+  <div class="app" hidden>
     <aside class="sidebar">
       <div class="brand"><span class="brand-mark"><i data-lucide="indian-rupee"></i></span>Expense Manager</div>
       <div class="sidebar-label">YOUR MONEY</div>
@@ -40,7 +52,7 @@
       <div class="sidebar-bottom"><strong>Made for your money.</strong>All amounts in Indian Rupees (INR).</div>
     </aside>
     <main class="main">
-      <header class="topbar"><div class="brand"><span class="brand-mark"><i data-lucide="indian-rupee"></i></span>Expense Manager</div><div class="top-actions"><label class="month-picker"><span>Month</span><select class="date-select" id="month-select" aria-label="Select month"></select></label><button class="icon-btn" aria-label="Add transaction" data-add><i data-lucide="plus"></i></button><span class="avatar" aria-label="Your profile">A</span></div></header>
+      <header class="topbar"><div class="brand"><span class="brand-mark"><i data-lucide="indian-rupee"></i></span>Expense Manager</div><div class="top-actions"><label class="month-picker"><span>Month</span><select class="date-select" id="month-select" aria-label="Select month"></select></label><button class="icon-btn" aria-label="Add transaction" data-add><i data-lucide="plus"></i></button><button class="avatar" id="sign-out" type="button" aria-label="Sign out of local demo" title="Sign out of demo">D</button></div></header>
       <section class="view active" id="view-overview">
         <div class="page-heading"><div><div class="eyebrow" id="greeting">YOUR MONEY AT A GLANCE</div><h1>Good to see you.</h1></div></div><p class="demo-notice">Demo workspace · data stays in this browser and is not linked to a bank account.</p>
         <div class="overview-grid">
@@ -56,7 +68,7 @@
       <section class="view" id="view-investments"><div class="page-heading"><div><div class="eyebrow">GROWING FOR TOMORROW</div><h1>Investments</h1></div><button class="icon-btn" aria-label="Add investment" data-add-investment><i data-lucide="plus"></i></button></div><div class="page-content"><article class="panel investment-hero"><div class="eyebrow">PORTFOLIO VALUE</div><div class="invest-total" id="portfolio-total">₹0</div><div class="invest-change" id="portfolio-growth">+₹0 all-time returns</div><div class="investment-allocation" id="allocation-bar"></div><div class="allocation-labels" id="allocation-labels"></div></article><article class="panel" style="margin-top:14px"><div class="section-row"><h2>Your portfolio</h2><span class="eyebrow">CURRENT VALUE</span></div><div class="asset-list" id="asset-list"></div></article><div style="margin-top:14px" id="investment-transactions"></div></div></section>
     </main>
   </div>
-  <nav class="bottom-nav" aria-label="Main navigation"></nav>
+  <nav class="bottom-nav" aria-label="Main navigation" hidden></nav>
   <div class="modal-backdrop" id="transaction-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><form class="modal" id="transaction-form"><div class="modal-heading"><h2 id="modal-title">New transaction</h2><button type="button" class="close-btn" aria-label="Close" data-close><i data-lucide="x"></i></button></div><div class="type-options" id="type-options"></div><div class="form-grid"><div class="field full"><label for="tx-title">What was it for?</label><input id="tx-title" name="title" placeholder="e.g. Weekly groceries" required maxlength="50"></div><div class="field"><label for="tx-amount">Amount (₹)</label><input id="tx-amount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required></div><div class="field"><label for="tx-category">Category</label><select id="tx-category" name="category"></select></div><div class="field"><label for="tx-date">Date</label><input id="tx-date" name="date" type="date" required></div><div class="field"><label for="tx-account">Paid using</label><select id="tx-account" name="account"><option>UPI</option><option>Bank account</option><option>Credit card</option><option>Cash</option><option>Debit card</option><option>Net banking</option><option>Wallet</option><option>Investment account</option><option>Other</option></select></div><div class="field full"><label for="tx-notes">Notes (optional)</label><input id="tx-notes" name="notes" maxlength="200"></div></div><button class="submit-btn" type="submit">Add transaction</button></form></div>
   <div class="modal-backdrop" id="budget-modal" role="dialog" aria-modal="true" aria-labelledby="budget-modal-title"><form class="modal" id="budget-form"><div class="modal-heading"><h2 id="budget-modal-title">Edit category budgets</h2><button type="button" class="close-btn" aria-label="Close" data-close><i data-lucide="x"></i></button></div><p id="budget-edit-month" class="budget-help"></p><div class="budget-category-inputs" id="budget-category-inputs"></div><div class="budget-edit-total">Monthly total <strong id="budget-edit-total">₹0</strong></div><div class="field"><label for="annual-budget-input">Yearly financial-year limit (₹)</label><input id="annual-budget-input" type="number" min="0.01" step="0.01" required></div><button class="submit-btn">Save budget</button></form></div>
   <div class="modal-backdrop" id="goal-modal" role="dialog" aria-modal="true" aria-labelledby="goal-modal-title"><form class="modal" id="goal-form"><div class="modal-heading"><h2 id="goal-modal-title">New savings goal</h2><button type="button" class="close-btn" aria-label="Close" data-close><i data-lucide="x"></i></button></div><div class="form-grid"><div class="field full"><label for="goal-name-input">Goal name</label><input id="goal-name-input" placeholder="e.g. Rainy day fund" required maxlength="35"></div><div class="field"><label for="goal-target-input">Target (₹)</label><input id="goal-target-input" type="number" min="1" required></div><div class="field"><label for="goal-saved-input">Saved so far (₹)</label><input id="goal-saved-input" type="number" min="0" value="0" required></div></div><button class="submit-btn">Create savings goal</button></form></div>
@@ -64,6 +76,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script>
     (()=>{
+      const demoSessionKey='expense-manager-demo-session',loginScreen=$('#login-screen'),appShell=$('.app'),bottomNav=$('.bottom-nav');
+      const showLogin=()=>{loginScreen.hidden=false;appShell.hidden=true;bottomNav.hidden=true};
+      const showApp=()=>{loginScreen.hidden=true;appShell.hidden=false;bottomNav.hidden=false};
+      $('#login-form').addEventListener('submit',event=>{event.preventDefault();try{sessionStorage.setItem(demoSessionKey,'active')}catch(error){console.error('Unable to persist local demo session',error);toast('Session storage is unavailable. The demo will only last until this page closes.')}showApp()});
+      $('#sign-out').addEventListener('click',()=>{try{sessionStorage.removeItem(demoSessionKey)}catch(error){console.error('Unable to end local demo session',error);toast('Could not sign out. Please close this tab to end the demo session.');return}showLogin()});
+      try{if(sessionStorage.getItem(demoSessionKey)==='active')showApp()}catch(error){console.error('Unable to restore local demo session',error);$('#login-status').textContent='Session storage is unavailable. Continuing will only last until this page closes.'}
       const categories={Expense:['Rent / EMI','Groceries (Kirana)','Food & dining','Utilities','Mobile / Broadband','Fuel / Transport','Shopping','Medical','OTT subscriptions','Domestic help','School / Tuition fees','Travel','Personal care','Other'],Income:['Salary','Freelance','Business','Interest','Gift','Other income'],Investment:['Mutual funds / SIP','Stocks','Fixed deposit','Gold','PPF / EPF','Other investment'],Savings:['Emergency fund','Savings account','Recurring deposit','Other savings'],Transfer:['Bank transfer','UPI transfer','Other transfer'],Loan:['Loan repayment','Loan received','Other loan'],Insurance:['Life insurance','Health insurance','Vehicle insurance','Other insurance']};
       const types=['Expense','Income','Investment','Savings','Transfer','Loan','Insurance'];
       const navItems=[['overview','layout-dashboard','Overview'],['transactions','arrow-left-right','Transactions'],['budgets','chart-pie','Budgets'],['savings','piggy-bank','Savings'],['investments','chart-no-axes-combined','Investments']];

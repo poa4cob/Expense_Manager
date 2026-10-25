@@ -3,7 +3,7 @@
 ## Product and architecture
 
 - Expense Manager is a single-page, installable PWA implemented with plain HTML, CSS, and JavaScript in `index.html`; `sw.js` caches the app shell.
-- The app is local-first: transactions, budgets, savings goals, and investment data are stored in browser `localStorage`. There is no server, user authentication, cloud sync, or multi-user access.
+- The app is local-first: transactions, budgets, savings goals, and investment data are stored in browser `localStorage`. The local demo sign-in is only a session UI gate; there is no server, real user authentication, cloud sync, or multi-user access.
 - Treat the current sample transactions, budgets, goals, and assets as demo data, not a connected financial account.
 - Keep changes compatible with this static architecture unless the user explicitly requests a migration. Do not add Next.js, Supabase, credentials, or backend services as assumptions.
 
@@ -17,6 +17,7 @@
 
 ## Existing functionality
 
+- A local demo sign-in screen gates the UI for the current browser tab session. It is not authentication and does not protect stored data.
 - The dashboard summarizes demo/local transactions, budgets, goals, and investments.
 - Transactions can be added, edited, deleted, searched, and filtered by type and date. Edit/delete controls are available on each transaction row. Savings and investment transaction edits keep app-created goal/portfolio effects in sync; legacy sample records without linked effects remain independent.
 - Savings goals and investment portfolio items can be edited or deleted from their respective views. Investment edits also update a linked contribution record when one exists.
