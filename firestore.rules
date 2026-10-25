@@ -74,6 +74,17 @@ service cloud.firestore {
           && request.resource.data.data is map;
         allow delete: if false;
       }
+
+      match /guest_settings/{settingId} {
+        allow get: if settingId == 'active' && isWorkspaceMember(workspaceId);
+        allow list: if false;
+        allow create, update: if settingId == 'active'
+          && isWorkspaceOwner(workspaceId)
+          && request.resource.data.keys().hasOnly(['token'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() == 64;
+        allow delete: if settingId == 'active' && isWorkspaceOwner(workspaceId);
+      }
     }
 
     match /user_workspaces/{userId} {
@@ -106,6 +117,24 @@ service cloud.firestore {
           && request.auth.token.email is string
           && emailKey == request.auth.token.email.lower()
           && getAfter(memberPath(resource.data.workspaceId, request.auth.uid)).data.uid == request.auth.uid);
+    }
+
+    match /guest_workspaces/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.resource.data.keys().hasOnly(['workspaceId', 'data', 'updatedAt'])
+        && request.resource.data.workspaceId is string
+        && request.resource.data.data is map
+        && request.resource.data.updatedAt == request.time
+        && isWorkspaceOwner(request.resource.data.workspaceId);
+      allow update: if resource.data.workspaceId == request.resource.data.workspaceId
+        && request.resource.data.keys().hasOnly(['workspaceId', 'data', 'updatedAt'])
+        && request.resource.data.data is map
+        && request.resource.data.updatedAt == request.time
+        && isWorkspaceMember(resource.data.workspaceId)
+        && get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)/guest_settings/active).data.token == token;
+      allow delete: if isWorkspaceOwner(resource.data.workspaceId)
+        && get(/databases/$(database)/documents/workspaces/$(resource.data.workspaceId)/guest_settings/active).data.token == token;
     }
 
     match /user_data/{userId} {
