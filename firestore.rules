@@ -2,13 +2,117 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /user_data/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create, update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
-        && request.resource.data.data is map;
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(workspaceId, userId) {
+      return /databases/$(database)/documents/workspaces/$(workspaceId)/members/$(userId);
+    }
+
+    function isWorkspaceMember(workspaceId) {
+      return signedIn() && exists(memberPath(workspaceId, request.auth.uid));
+    }
+
+    function isWorkspaceOwner(workspaceId) {
+      return isWorkspaceMember(workspaceId)
+        && get(memberPath(workspaceId, request.auth.uid)).data.role == 'owner';
+    }
+
+    function invitePath() {
+      return /databases/$(database)/documents/workspace_invites/$(request.auth.token.email.lower());
+    }
+
+    function hasMatchingInvite(workspaceId) {
+      return signedIn()
+        && request.auth.token.email is string
+        && exists(invitePath())
+        && get(invitePath()).data.workspaceId == workspaceId
+        && get(invitePath()).data.email == request.auth.token.email.lower();
+    }
+
+    match /workspaces/{workspaceId} {
+      allow get: if isWorkspaceMember(workspaceId);
+      allow list: if false;
+      allow create: if signedIn()
+        && workspaceId == request.auth.uid
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['ownerId', 'name', 'createdAt']);
+      allow update, delete: if false;
+
+      match /members/{memberId} {
+        allow get: if signedIn()
+          && (memberId == request.auth.uid || isWorkspaceOwner(workspaceId));
+        allow list: if isWorkspaceOwner(workspaceId);
+        allow create: if signedIn()
+          && memberId == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.email == request.auth.token.email.lower()
+          && (
+            (workspaceId == request.auth.uid
+              && request.resource.data.role == 'owner'
+              && getAfter(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid)
+            || (request.resource.data.role == 'editor' && hasMatchingInvite(workspaceId))
+          )
+          && request.resource.data.keys().hasOnly(['uid', 'email', 'role', 'joinedAt']);
+        allow update: if signedIn()
+          && memberId == request.auth.uid
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.email == request.auth.token.email.lower()
+          && request.resource.data.role == 'editor'
+          && hasMatchingInvite(workspaceId)
+          && request.resource.data.keys().hasOnly(['uid', 'email', 'role', 'joinedAt']);
+        allow delete: if false;
+      }
+
+      match /shared/{documentId} {
+        allow get: if documentId == 'data' && isWorkspaceMember(workspaceId);
+        allow list: if false;
+        allow create, update: if documentId == 'data'
+          && isWorkspaceMember(workspaceId)
+          && request.resource.data.keys().hasOnly(['data', 'updatedAt'])
+          && request.resource.data.data is map;
+        allow delete: if false;
+      }
+    }
+
+    match /user_workspaces/{userId} {
+      allow get: if signedIn() && userId == request.auth.uid;
+      allow list: if false;
+      allow create, update: if signedIn()
+        && userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['workspaceId', 'updatedAt'])
+        && (
+          (request.resource.data.workspaceId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/workspaces/$(request.auth.uid)).data.ownerId == request.auth.uid)
+          || hasMatchingInvite(request.resource.data.workspaceId)
+        );
       allow delete: if false;
+    }
+
+    match /workspace_invites/{emailKey} {
+      allow get: if signedIn()
+        && request.auth.token.email is string
+        && emailKey == request.auth.token.email.lower()
+        && resource.data.email == emailKey;
+      allow list: if false;
+      allow create, update: if signedIn()
+        && isWorkspaceOwner(request.resource.data.workspaceId)
+        && request.resource.data.email == emailKey
+        && emailKey != request.auth.token.email.lower()
+        && request.resource.data.invitedBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(['email', 'workspaceId', 'invitedBy', 'createdAt']);
+      allow delete: if (signedIn() && isWorkspaceOwner(resource.data.workspaceId))
+        || (signedIn()
+          && request.auth.token.email is string
+          && emailKey == request.auth.token.email.lower()
+          && getAfter(memberPath(resource.data.workspaceId, request.auth.uid)).data.uid == request.auth.uid);
+    }
+
+    match /user_data/{userId} {
+      allow get: if signedIn() && userId == request.auth.uid;
+      allow list: if false;
+      allow create, update, delete: if false;
     }
   }
 }

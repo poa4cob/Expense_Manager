@@ -37,17 +37,18 @@ Find the organization and project IDs in the linked Vercel project's `.vercel/pr
 1. Create a Firebase project in the [Firebase console](https://console.firebase.google.com/).
 2. Add a **Web app** to the project and copy its Firebase config object (`apiKey`, `authDomain`, `projectId`, `appId`, and any other fields).
 3. In **Authentication → Sign-in method**, enable **Google** and choose a support email. In **Authentication → Settings → Authorized domains**, add `expensemanager-weld.vercel.app` and `localhost` for local development.
-4. Create a **Cloud Firestore** database, then publish [`firestore.rules`](./firestore.rules). These rules let signed-in users access only their own data document.
+4. Create a **Cloud Firestore** database, then publish [`firestore.rules`](./firestore.rules). These rules protect workspaces, member records, invitations, and shared data.
 5. For local development, copy [`firebase-config.example.js`](./firebase-config.example.js) to `firebase-config.js` and replace the example values with your Firebase web config. `firebase-config.js` is ignored by Git.
 6. For tagged-release deployment, add a GitHub Actions repository secret named `FIREBASE_CONFIG_JSON` containing the Firebase config object as JSON. The workflow writes it to the ignored `firebase-config.js` before building. Add this alongside the Vercel secrets.
-7. Select **Continue with Google** and choose your Google account. The first sign-in creates the account; use that same Google account on each device.
+7. Select **Continue with Google** and choose your Google account. The first sign-in creates your workspace; use that same Google account on each device.
+8. In the app, the workspace owner selects **Invite** and enters the collaborator's Google account email. Expense Manager does not send email; share the app link and ask them to sign in with that Google account. The pending invitation is accepted automatically at sign-in. Members can view and edit all shared workspace data.
 
-Firebase web configuration is intended for browser apps; it is not a password or admin credential. Never include a Firebase service-account private key in this app. Firestore security rules enforce account ownership.
+Firebase web configuration is intended for browser apps; it is not a password or admin credential. Never include a Firebase service-account private key in this app. Firestore rules restrict shared data to workspace members; only workspace owners can invite additional members.
 
-On first login, if the account has no cloud data yet, existing browser data is imported to that account. After that, local caches are separated by authenticated user ID. If a Firebase account already has data, that cloud data is used instead of local data.
+On first login, the workspace owner’s existing Firestore account data is copied into the new workspace. If no cloud data exists, the owner’s existing browser data is used and saved to the workspace. A collaborator who accepts an invitation is switched to the invited shared workspace. Their previous personal workspace is not deleted, but this app does not yet provide a workspace switcher.
 
 ## Data and limitations
 
-Records sync through the configured Firebase project and are also cached in the current browser's `localStorage`. Each save uploads the signed-in account's full data snapshot, so avoid editing the same account simultaneously on multiple devices; the most recent save replaces that snapshot. Firebase availability affects sign-in and sync. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
+Records sync through the configured Firebase project and are also cached in the current browser's `localStorage`. Each save uploads the full shared workspace snapshot. Simultaneous edits by multiple members can overwrite each other; the most recent save replaces the snapshot, so coordinate concurrent editing. Firebase availability affects sign-in and sync. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
 
 This is not connected to a bank and does not provide automatic SMS access or bank statement import. See [AGENT.md](./AGENT.md) for project development and privacy guidelines.
