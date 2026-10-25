@@ -34,19 +34,20 @@ Find the organization and project IDs in the linked Vercel project's `.vercel/pr
 
 ## Account sync setup
 
-Create a Supabase project, enable email/password sign-in, and run [`supabase/schema.sql`](./supabase/schema.sql) in its SQL Editor. In **Authentication → URL Configuration**, set the Site URL to `https://expensemanager-weld.vercel.app` and add any local development URL you use to the allowed redirect URLs. The schema creates a per-user JSON data row protected by row-level security. Never put a Supabase service-role key in this app; the browser uses only the project URL and anon/publishable key, and database policies restrict each account to its own row.
+1. Create a Firebase project in the [Firebase console](https://console.firebase.google.com/).
+2. Add a **Web app** to the project and copy its Firebase config object (`apiKey`, `authDomain`, `projectId`, `appId`, and any other fields).
+3. In **Authentication → Sign-in method**, enable **Google** and choose a support email. In **Authentication → Settings → Authorized domains**, add `expensemanager-weld.vercel.app` and `localhost` for local development.
+4. Create a **Cloud Firestore** database, then publish [`firestore.rules`](./firestore.rules). These rules let signed-in users access only their own data document.
+5. For local development, copy [`firebase-config.example.js`](./firebase-config.example.js) to `firebase-config.js` and replace the example values with your Firebase web config. `firebase-config.js` is ignored by Git.
+6. For tagged-release deployment, add a GitHub Actions repository secret named `FIREBASE_CONFIG_JSON` containing the Firebase config object as JSON. The workflow writes it to the ignored `firebase-config.js` before building. Add this alongside the Vercel secrets.
+7. Select **Continue with Google** and choose your Google account. The first sign-in creates the account; use that same Google account on each device.
 
-For local use, copy [`supabase-config.example.js`](./supabase-config.example.js) to `supabase-config.js` and set the project URL and anon/publishable key. `supabase-config.js` is ignored by Git.
+Firebase web configuration is intended for browser apps; it is not a password or admin credential. Never include a Firebase service-account private key in this app. Firestore security rules enforce account ownership.
 
-For tagged-release deployment, add these repository Actions secrets in addition to the Vercel secrets:
-
-- `SUPABASE_URL`: the project URL from Supabase **Project Settings → API**.
-- `SUPABASE_ANON_KEY`: the anon/publishable key from the same page. This browser key is public by design; never use the service-role key.
-
-On first login, if the account has no cloud data yet, existing browser data is imported to that account. After the first successful cloud save, the old shared local data keys are removed; future local caches are separated by authenticated user ID. Create an account with an email and password, confirm the email if Supabase requests it, then log in on each device with that same account.
+On first login, if the account has no cloud data yet, existing browser data is imported to that account. After that, local caches are separated by authenticated user ID. If a Firebase account already has data, that cloud data is used instead of local data.
 
 ## Data and limitations
 
-Records sync through the configured Supabase project and are also cached in the current browser's `localStorage`. Each save uploads the signed-in account's full data snapshot, so avoid editing the same account simultaneously on multiple devices; the most recent save replaces that snapshot. Supabase and email provider availability affect sign-in and sync. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
+Records sync through the configured Firebase project and are also cached in the current browser's `localStorage`. Each save uploads the signed-in account's full data snapshot, so avoid editing the same account simultaneously on multiple devices; the most recent save replaces that snapshot. Firebase availability affects sign-in and sync. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
 
 This is not connected to a bank and does not provide automatic SMS access or bank statement import. See [AGENT.md](./AGENT.md) for project development and privacy guidelines.

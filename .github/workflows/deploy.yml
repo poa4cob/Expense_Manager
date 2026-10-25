@@ -32,11 +32,10 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
           missing=()
-          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID SUPABASE_URL SUPABASE_ANON_KEY; do
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID FIREBASE_CONFIG_JSON; do
             if [[ -z "${!name}" ]]; then
               missing+=("$name")
             fi
@@ -55,12 +54,11 @@ jobs:
         run: |
           vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Configure Supabase client
+      - name: Configure Firebase client
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
-          node -e 'const fs=require("node:fs");const config={url:process.env.SUPABASE_URL,anonKey:process.env.SUPABASE_ANON_KEY};fs.writeFileSync("supabase-config.js",`window.EXPENSE_MANAGER_SUPABASE = ${JSON.stringify(config)};\n`);'
+          node -e 'const fs=require("node:fs");const config=JSON.parse(process.env.FIREBASE_CONFIG_JSON);for(const key of ["apiKey","authDomain","projectId","appId"])if(!config[key])throw Error(`Firebase config is missing ${key}`);fs.writeFileSync("firebase-config.js",`window.EXPENSE_MANAGER_FIREBASE = ${JSON.stringify(config)};\n`);'
 
       - name: Build Vercel deployment
         env:

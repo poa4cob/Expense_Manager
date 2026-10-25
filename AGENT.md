@@ -3,27 +3,27 @@
 ## Product and architecture
 
 - Expense Manager is a single-page, installable PWA implemented with plain HTML, CSS, and JavaScript in `index.html`; `sw.js` caches the app shell.
-- Transactions, budgets, savings goals, and investment data are stored in browser `localStorage` and synced to a Supabase `user_data` row scoped to the authenticated user. Supabase Row Level Security must remain enabled; browser code must never use a service-role key.
+- Transactions, budgets, savings goals, and investment data are stored in browser `localStorage` and synced to the Firebase Firestore `user_data/{uid}` document scoped to the authenticated user. Firestore rules must restrict access to the signed-in user's UID; browser code must never use a service-account private key.
 - Treat the current sample transactions, budgets, goals, and assets as demo data, not a connected financial account.
-- Keep changes compatible with this static architecture and existing Supabase integration unless the user explicitly requests a migration. Do not add another framework, provider, or backend as an assumption.
+- Keep changes compatible with this static architecture and existing Firebase integration unless the user explicitly requests a migration. Do not add another framework, provider, or backend as an assumption.
 
 ## Financial data and privacy
 
 - Format money as INR using `Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 })`; keep calendar dates in local time and financial years from April 1 through March 31.
 - Escape user-provided text before inserting it into HTML. Protect CSV exports against spreadsheet formula injection.
-- `localStorage` is a per-browser cache, is not encrypted, and is not shared across devices. Supabase sync is per authenticated user; it is not a backup. Do not store bank credentials, full account numbers, authentication secrets, or raw bank messages.
+- `localStorage` is a per-browser cache, is not encrypted, and is not shared across devices. Firebase sync is per authenticated user; it is not a backup. Do not store bank credentials, full account numbers, authentication secrets, or raw bank messages.
 - Browsers do not provide general access to a user's SMS inbox. Do not claim automatic SMS reading or that SMS content is uploaded or parsed.
 - Do not represent the app as supporting shared groups, real bank-account aggregation, statement imports, or cloud backup. These require separately designed integrations and security controls.
 
 ## Existing functionality
 
-- Email/password sign-in and account creation use Supabase Auth. The profile icon uses the account display name's initial.
+- Google sign-in uses Firebase Authentication. The profile icon uses the account display name's initial.
 - The dashboard summarizes the signed-in user's transactions, budgets, goals, and investments; new accounts start with sample entries.
 - Transactions can be added, edited, deleted, searched, and filtered by type and date. Edit/delete controls are available on each transaction row. Savings and investment transaction edits keep app-created goal/portfolio effects in sync; legacy sample records without linked effects remain independent.
 - Savings goals and investment portfolio items can be edited or deleted from their respective views. Investment edits also update a linked contribution record when one exists.
 - Reports can be filtered by date range or Indian financial year, exported as CSV, and printed/saved as PDF through the browser.
 - The Month picker applies to the dashboard and budget view. Category budgets are stored independently for each month; selecting a month without a plan copies the latest earlier plan so it can be reviewed and edited. The budget page shows monthly spending against plan and the selected month's Indian financial-year totals.
-- Monthly category amounts are edited individually through the budget-page edit control. The yearly financial-year limit remains a separate setting. Savings goals and investment entries are also local-only.
+- Monthly category amounts are edited individually through the budget-page edit control. The yearly financial-year limit remains a separate setting. Savings goals and investment entries are synced per authenticated user.
 - Selecting a payment method is not bank-account management; no actual bank balances are connected.
 
 ## Implementation conventions

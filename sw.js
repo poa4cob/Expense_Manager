@@ -1,4 +1,4 @@
-const CACHE_NAME = 'expense-manager-shell-v9';
+const CACHE_NAME = 'expense-manager-shell-v10';
 const APP_FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
