@@ -22,7 +22,7 @@ Then open <http://localhost:8000>.
 
 The GitHub Actions workflow builds and deploys every branch push to Vercel as a preview deployment. Push a tag matching `v*` (for example, `v1.0.0`) to build and deploy to production; the workflow also creates a GitHub Release and attaches `Expense-Manager-vercel-output.zip`, containing the exact Vercel build output used for that deployment.
 
-Add these repository Actions secrets before using the workflow:
+Vercel's GitHub integration does not expose its deployment credentials to GitHub Actions. Add these repository Actions secrets before using the workflow:
 
 - `VERCEL_TOKEN`: a Vercel access token with access to the project.
 - `VERCEL_ORG_ID`: the Vercel team or account ID.
