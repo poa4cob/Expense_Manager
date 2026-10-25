@@ -20,7 +20,9 @@ Then open <http://localhost:8000>.
 
 ## Deploy with Vercel
 
-The GitHub Actions workflow builds and deploys every branch push to Vercel as a preview deployment. Push a tag matching `v*` (for example, `v1.0.0`) to build and deploy to production; the workflow also creates a GitHub Release and attaches `Expense-Manager-vercel-output.zip`, containing the exact Vercel build output used for that deployment.
+The GitHub Actions workflow runs only when a version tag matching `v*` is pushed (for example, `v1.0.0`); ordinary branch pushes and manual workflow runs do not deploy. It builds and deploys that version to Vercel production, then creates a GitHub Release for the tag and attaches `Expense-Manager-vercel-output.zip`, containing the exact Vercel build output used for that deployment. The `publish-release` job creates the GitHub Release and attaches the artifact; it does not deploy to Vercel.
+
+Vercel can also deploy commits directly through its Git integration, independently of GitHub Actions. Disable automatic Git deployments in the Vercel project settings if all deployments must happen only through this tag-triggered workflow.
 
 Vercel's GitHub integration does not expose its deployment credentials to GitHub Actions. Add these repository Actions secrets before using the workflow:
 
