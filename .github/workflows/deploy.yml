@@ -60,7 +60,7 @@ jobs:
         env:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
-          node -e 'const fs=require("node:fs");const config=JSON.parse(process.env.FIREBASE_CONFIG_JSON);for(const key of ["apiKey","authDomain","projectId","appId"])if(typeof config[key]!=="string"||!config[key].trim()||config[key].startsWith("YOUR_"))throw Error(`Firebase config has a missing or placeholder ${key}`);fs.writeFileSync("firebase-config.js",`window.EXPENSE_MANAGER_FIREBASE = ${JSON.stringify(config)};\n`);'
+          node -e 'const fs=require("node:fs");const config=JSON.parse(process.env.FIREBASE_CONFIG_JSON);for(const key of ["apiKey","authDomain","projectId","appId"])if(typeof config[key]!=="string"||!config[key].trim()||config[key].startsWith("YOUR_"))throw Error(`Firebase config has a missing or placeholder ${key}`);const json=JSON.stringify(config).replace(/</g,"\\u003c");fs.writeFileSync("firebase-config.js",`window.EXPENSE_MANAGER_FIREBASE = ${json};\n`);const html=fs.readFileSync("index.html","utf8"),marker=`<script id="firebase-config-fallback" type="application/json">{}</script>`;if(!html.includes(marker))throw Error("Firebase config fallback marker is missing from index.html");fs.writeFileSync("index.html",html.replace(marker,`<script id="firebase-config-fallback" type="application/json">${json}</script>`));'
 
       - name: Build Vercel deployment
         env:
