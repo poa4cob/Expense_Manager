@@ -32,8 +32,21 @@ Vercel's GitHub integration does not expose its deployment credentials to GitHub
 
 Find the organization and project IDs in the linked Vercel project's `.vercel/project.json` after running `vercel link` locally. Do not commit that file or the access token.
 
+## Account sync setup
+
+Create a Supabase project, enable email/password sign-in, and run [`supabase/schema.sql`](./supabase/schema.sql) in its SQL Editor. In **Authentication → URL Configuration**, set the Site URL to `https://expensemanager-weld.vercel.app` and add any local development URL you use to the allowed redirect URLs. The schema creates a per-user JSON data row protected by row-level security. Never put a Supabase service-role key in this app; the browser uses only the project URL and anon/publishable key, and database policies restrict each account to its own row.
+
+For local use, copy [`supabase-config.example.js`](./supabase-config.example.js) to `supabase-config.js` and set the project URL and anon/publishable key. `supabase-config.js` is ignored by Git.
+
+For tagged-release deployment, add these repository Actions secrets in addition to the Vercel secrets:
+
+- `SUPABASE_URL`: the project URL from Supabase **Project Settings → API**.
+- `SUPABASE_ANON_KEY`: the anon/publishable key from the same page. This browser key is public by design; never use the service-role key.
+
+On first login, if the account has no cloud data yet, existing browser data is imported to that account. After the first successful cloud save, the old shared local data keys are removed; future local caches are separated by authenticated user ID. Create an account with an email and password, confirm the email if Supabase requests it, then log in on each device with that same account.
+
 ## Data and limitations
 
-This is a local-only prototype. Records are saved in the current browser's `localStorage` and are not encrypted, backed up, synchronized, or linked to a bank. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
+Records sync through the configured Supabase project and are also cached in the current browser's `localStorage`. Each save uploads the signed-in account's full data snapshot, so avoid editing the same account simultaneously on multiple devices; the most recent save replaces that snapshot. Supabase and email provider availability affect sign-in and sync. The initial entries are sample data. Do not enter bank credentials, full account numbers, or other highly sensitive information.
 
-The app opens with a local demo sign-in screen. Continuing only hides the screen for the current browser tab session; there are no accounts, passwords, or secure access controls, and anyone with access to the browser can access its saved data. There is no multi-user sharing, connected bank-account balance, automatic SMS access, bank statement import, or cloud service. See [AGENT.md](./AGENT.md) for project development and privacy guidelines.
+This is not connected to a bank and does not provide automatic SMS access or bank statement import. See [AGENT.md](./AGENT.md) for project development and privacy guidelines.
