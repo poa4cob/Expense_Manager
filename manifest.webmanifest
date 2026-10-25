@@ -1,6 +1,6 @@
 {
-  "name": "Paisa. Money Manager",
-  "short_name": "Paisa",
+  "name": "Expense Manager",
+  "short_name": "Expense Manager",
   "description": "A thoughtful home for spending, saving, budgets and investments.",
   "start_url": "./",
   "scope": "./",
