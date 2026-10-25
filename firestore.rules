@@ -93,8 +93,7 @@ service cloud.firestore {
     match /workspace_invites/{emailKey} {
       allow get: if signedIn()
         && request.auth.token.email is string
-        && emailKey == request.auth.token.email.lower()
-        && resource.data.email == emailKey;
+        && emailKey == request.auth.token.email.lower();
       allow list: if false;
       allow create, update: if signedIn()
         && isWorkspaceOwner(request.resource.data.workspaceId)
