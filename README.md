@@ -20,7 +20,7 @@ Then open <http://localhost:8000>.
 
 ## Deploy with Vercel
 
-The GitHub Actions workflow runs only when a version tag matching `v*` is pushed (for example, `v1.0.0`); ordinary branch pushes and manual workflow runs do not deploy. It builds the tagged version, publishes the GitHub Release with `Expense-Manager-vercel-output.zip`, and only then deploys that same build to Vercel production. If release publishing fails, deployment does not run. If the later Vercel deployment fails, the GitHub Release will exist but the production site will remain on its previous deployment.
+The GitHub Actions workflow runs a Vercel production-target build on every branch push. These branch builds do not publish releases or deploy to production. When a version tag matching `v*` is pushed (for example, `v1.0.0`), the workflow builds that tagged version, publishes the GitHub Release with `Expense-Manager-vercel-output.zip`, and only then deploys that same build to Vercel production. If release publishing fails, deployment does not run. If the later Vercel deployment fails, the GitHub Release will exist but the production site will remain on its previous deployment.
 
 Vercel's Git integration deploys independently of GitHub Actions and does not wait for the release job. To ensure the production URL changes only after the tagged release has been published, disconnect the Git repository in the Vercel project under **Settings → Git**. The GitHub Actions workflow continues to deploy through the Vercel CLI using the credentials below; disconnecting Git does not disable those CLI deployments.
 
