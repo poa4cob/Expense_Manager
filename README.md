@@ -20,9 +20,9 @@ Then open <http://localhost:8000>.
 
 ## Deploy with Vercel
 
-The GitHub Actions workflow runs only when a version tag matching `v*` is pushed (for example, `v1.0.0`); ordinary branch pushes and manual workflow runs do not deploy. It builds and deploys that version to Vercel production, then creates a GitHub Release for the tag and attaches `Expense-Manager-vercel-output.zip`, containing the exact Vercel build output used for that deployment. The `publish-release` job creates the GitHub Release and attaches the artifact; it does not deploy to Vercel.
+The GitHub Actions workflow runs only when a version tag matching `v*` is pushed (for example, `v1.0.0`); ordinary branch pushes and manual workflow runs do not deploy. It builds the tagged version, publishes the GitHub Release with `Expense-Manager-vercel-output.zip`, and only then deploys that same build to Vercel production. If release publishing fails, deployment does not run. If the later Vercel deployment fails, the GitHub Release will exist but the production site will remain on its previous deployment.
 
-Vercel can also deploy commits directly through its Git integration, independently of GitHub Actions. Disable automatic Git deployments in the Vercel project settings if all deployments must happen only through this tag-triggered workflow.
+Vercel's Git integration deploys independently of GitHub Actions and does not wait for the release job. To ensure the production URL changes only after the tagged release has been published, disconnect the Git repository in the Vercel project under **Settings → Git**. The GitHub Actions workflow continues to deploy through the Vercel CLI using the credentials below; disconnecting Git does not disable those CLI deployments.
 
 Vercel's GitHub integration does not expose its deployment credentials to GitHub Actions. Add these repository Actions secrets before using the workflow:
 
@@ -42,6 +42,8 @@ Find the organization and project IDs in the linked Vercel project's `.vercel/pr
 6. For tagged-release deployment, add a GitHub Actions repository secret named `FIREBASE_CONFIG_JSON` containing the Firebase config object as JSON. The workflow writes it to the ignored `firebase-config.js` before building. Add this alongside the Vercel secrets.
 7. Select **Continue with Google** and choose your Google account. The first sign-in creates your workspace; use that same Google account on each device.
 8. In the app, the workspace owner selects **Invite** and enters the collaborator's Google account email. Expense Manager does not send email; share the app link and ask them to sign in with that Google account. The pending invitation is accepted automatically at sign-in. Members can view and edit all shared workspace data.
+
+If sign-in reports `auth/api-key-not-valid`, copy the `apiKey` from the Firebase project's **Project settings → General → Your apps → Web app** config. For a deployed release, replace the GitHub Actions `FIREBASE_CONFIG_JSON` secret with that complete valid JSON object, then create and push a new `v*` tag; the deployed site's config is generated during the tagged build. For local use, update the ignored `firebase-config.js` and reload. Also check in Google Cloud Console that the API key belongs to the same Firebase project and that any key restrictions allow Firebase Authentication and requests from your Vercel domain. Never paste a service-account key here.
 
 Firebase web configuration is intended for browser apps; it is not a password or admin credential. Never include a Firebase service-account private key in this app. Firestore rules restrict shared data to workspace members; only workspace owners can invite additional members.
 
